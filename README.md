@@ -1,6 +1,6 @@
 # Python---Gmail
 
-About:
+About:/n
 This Python script retrives gmail via GoogleAPI for the given from addressm before date and after date.
 Stay tuned for more function :)
 
