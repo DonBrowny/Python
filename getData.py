@@ -4,18 +4,17 @@ import requests
 import datetime
 from bs4 import BeautifulSoup
 import xlsxwriter
-import numpy
-import pandas
-import pytz
-import dateutil
 
 def convetTime(uinxTime):
-    return datetime.datetime.fromtimestamp(int(uinxTime)).strftime('%d-%m-%Y %H:%M:%S')
+    if(int(uinxTime) > 0):
+        return datetime.datetime.fromtimestamp(int(uinxTime)).strftime('%d-%m-%Y %H:%M:%S')
+    else:
+        return uinxTime
 
 def fetch_data():
     url = "http://wotlabs.net/sea/clan/ina"
     soup = BeautifulSoup(requests.get(url).text,"html.parser")
-    pprint.pprint(getNames(soup))
+    writeExcel((getNames(soup)))
     #Test data to be commented out
     #tempPlayerDetails = [{2005083140: 'm_y765'}]
     #pprint.pprint(getSats(tempPlayerDetails))
@@ -55,8 +54,8 @@ def getVehicles(playerID):
     else:
         return 'null'
 
-def writeExcel():
-    tempdata = [{'CreatedDate': '18-04-2011 16:26:36',
+def writeExcel(dataToWrite):
+    tempdata1 = [{'CreatedDate': '18-04-2011 16:26:36',
               'HitRatio': 46,
               'LastBattle': '24-05-2017 17:24:58',
               'PlayerId': '2000575131',
@@ -64,8 +63,8 @@ def writeExcel():
               'Rating': 2198,
               'SH_Battles': 26,
               'TotalBattles': 4058,
-              'Vehicles': 'null'},
-             {'CreatedDate': '10-01-2013 04:12:10',
+              'Vehicles': 'null'}]
+    tempdata2 = [{'CreatedDate': '10-01-2013 04:12:10',
               'HitRatio': 61,
               'LastBattle': '19-05-2017 21:42:42',
               'PlayerId': '2001444796',
@@ -80,17 +79,35 @@ def writeExcel():
                                     'damage_dealt': 1531457,
                                     'hits_percents': 70}}]}]
 
-##    workbook = xlsxwriter.Workbook('demo.xlsx')
-##    worksheet = workbook.add_worksheet()
-##    row = 1    
-##    for item in tempdata:
-##        row++
-##        col = 0
-        
-    pandas.read_json(tempdata).to_excel("output.xlsx")
+    columnTemplate = {0:'PlayerName', 1:'CreatedDate', 2 : 'LastBattle',
+                      3:'TotalBattles',4:'Rating',5:'HitRatio',6:'SH_Battles' }
+
+    vehicleTemplate = {1105:{7:'battles' , 8:'hits_percents'},55889:{9:'battles', 10:'hits_percents'},
+                       2561:{11:'battles', 12:'hits_percents'},16673:{13:'battles', 14:'hits_percents'},
+                       64817:{15:'battles', 16:'hits_percents'},5473:{17:'battles', 18:'hits_percents'},
+                       59393:{19:'battles', 20:'hits_percents'},58113:{21:'battles', 22:'hits_percents'},
+                       52321:{23:'battles', 24:'hits_percents'},4913:{25:'battles', 26:'hits_percents'}}
+    workbook = xlsxwriter.Workbook('Expenses01.xlsx')
+    worksheet = workbook.add_worksheet()
+    row = 0
+    for item in dataToWrite:
+        writeCell(row,worksheet,item,columnTemplate)        
+        if(item['Vehicles'] != 'null'):
+            for veh in item['Vehicles']:
+                key = list(veh.keys())[0]
+                writeCell(row, worksheet,veh[key],vehicleTemplate[key])
+        row = row +1
+    workbook.close()
+
+def writeCell(rowNum,worksheet, rowData, columnTemplate):
+    for colNum, dicKey in columnTemplate.items():
+        if(rowData[dicKey]):
+            worksheet.write(rowNum,colNum,rowData[dicKey])
+        else:
+            worksheet.write(rowNum,colNum,0)      
     
     
     
 if __name__=="__main__":
-    #fetch_data()
-    writeExcel()
+    fetch_data()
+    
